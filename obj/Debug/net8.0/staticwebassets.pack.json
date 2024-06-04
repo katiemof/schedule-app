@@ -1,0 +1,41 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/katiemoffitt/projects/Schedule_App/ScheduleApp/obj/Debug/net8.0/scopedcss/projectbundle/ScheduleApp.bundle.scp.css",
+      "PackagePath": "staticwebassets/ScheduleApp.bundle.scp.css"
+    },
+    {
+      "Id": "/Users/katiemoffitt/projects/Schedule_App/ScheduleApp/wwwroot/app.css",
+      "PackagePath": "staticwebassets/app.css"
+    },
+    {
+      "Id": "/Users/katiemoffitt/projects/Schedule_App/ScheduleApp/wwwroot/bootstrap/bootstrap.min.css",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css"
+    },
+    {
+      "Id": "/Users/katiemoffitt/projects/Schedule_App/ScheduleApp/wwwroot/bootstrap/bootstrap.min.css.map",
+      "PackagePath": "staticwebassets/bootstrap/bootstrap.min.css.map"
+    },
+    {
+      "Id": "/Users/katiemoffitt/projects/Schedule_App/ScheduleApp/wwwroot/favicon.png",
+      "PackagePath": "staticwebassets/favicon.png"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.ScheduleApp.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.ScheduleApp.props",
+      "PackagePath": "build\\ScheduleApp.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.ScheduleApp.props",
+      "PackagePath": "buildMultiTargeting\\ScheduleApp.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.ScheduleApp.props",
+      "PackagePath": "buildTransitive\\ScheduleApp.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

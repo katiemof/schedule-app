@@ -1,0 +1,254 @@
+@page "/schedule"
+@using Spire.Xls
+@using System.Text
+@rendermode InteractiveServer
+
+<PageTitle>Office Schedule</PageTitle>
+
+<h1>Office Schedule</h1>
+
+<p>Please submit your .csv file here.</p>
+
+<InputFile OnChange="LoadFile" />
+
+@if(isLoading){
+    <p>Upload in progress...</p>
+}
+else if (loadedFile == null){
+
+}
+else{
+    <ul>
+        <li>Name: @loadedFile?.Name</li>
+        <li>Type: @loadedFile?.ContentType</li>
+        <li>Last Modified: @loadedFile?.LastModified.ToString()</li>
+        <li>Size (Bytes): @loadedFile?.Size</li>
+    </ul>
+}
+
+@code {
+    /*
+        This page takes a .csv file from the google form for office hours, creates a list of each submission, and then
+        creates the schedule from  the given availabilities. Preference is given in order of the time that the response was
+        received
+    */
+    class Preference {
+        public bool monday;
+        public string? mondayHours;
+        public bool tuesday;
+        public string? tuesdayHours;
+        public bool wednesday;
+        public string? wednesdayHours;
+        public bool thursday;
+        public string? thursdayHours;
+        public bool friday;
+        public string? fridayHours;
+        public bool backToBack;
+        int daysPref;
+
+        public Preference(string input){
+            // make input all lowercase
+            input = input.ToLower();
+
+            if(input.Contains("monday") || input.Contains("mwf")){
+                this.monday = true;
+                this.daysPref++;
+            }
+            if(input.Contains("tuesday") || input.Contains("mwf")){
+                this.tuesday = true;
+                this.daysPref++;
+            }
+            if(input.Contains("wednesday") || input.Contains("mwf")){
+                this.wednesday = true;
+                this.daysPref++;
+            }
+            if(input.Contains("thursday")){
+                this.thursday = true;
+                this.daysPref++;
+            }
+            if(input.Contains("friday") || input.Contains("mwf")){
+                this.friday = true;
+                this.daysPref++;
+            }
+            if(input.Contains("back") || input.Contains("consecutive") || input.Contains("back to back") || input.Contains("one day") || this.daysPref <= 1){
+                this.backToBack = true;
+            }
+        }
+    }
+    class AmbassadorInfo {
+        public DateTime? receiveTime;
+        public string? name;
+        public string? netid;
+        public string? major;
+        public bool onCoop;
+        public string? MonAvailablity;
+        public string? TuesAvailablity;
+        public string? WednesAvailablity;
+        public string? ThursAvailablity;
+        public string? FriAvailablity;
+        public string? pref;
+        public Preference? preference;
+
+        public bool hasOneHour;
+        public bool hasTwoHours;
+        public string? hourOne;
+        public string? hourTwo;
+
+        public AmbassadorInfo( DateTime? receiveTime, string? name, string? netid, string? major, 
+            string? onCoop, string? mon, string? tues, string? wed, string? thurs, string? fri, string? pref)
+        {
+            this.receiveTime = receiveTime;
+            this.name = name;
+            this.netid = netid;
+            
+            if (onCoop == "No"){
+                this.onCoop = false;
+            }
+            else{
+                this.onCoop = true;
+            }
+
+            this.major = major;
+            this.MonAvailablity = mon;
+            this.TuesAvailablity = tues;
+            this.WednesAvailablity = wed;
+            this.ThursAvailablity = thurs;
+            this.FriAvailablity = fri;
+            this.pref = pref;
+            // everyone must be scheduled for two hours
+            this.hasOneHour = false;
+            this.hasTwoHours = false;
+            
+            if (pref != null){
+                this.preference = new Preference(pref);
+            }
+        }
+    }
+
+    class ScheduleDay {
+        public List<AmbassadorInfo>? nineToTen;
+        public List<AmbassadorInfo>? tenToEleven;
+        public List<AmbassadorInfo>? elevenToTwelve;
+        public List<AmbassadorInfo>? twelveToOne;
+        public List<AmbassadorInfo>? oneToTwo;
+        public List<AmbassadorInfo>? twoToThree;
+        public List<AmbassadorInfo>? threeToFour;
+        
+        public ScheduleDay(){
+        }
+    }
+
+    private IBrowserFile? loadedFile;
+    private bool isLoading;
+    private List<AmbassadorInfo>? Responses;
+    private List<ScheduleDay>? ScheduleWeek;
+
+    private void LoadFile(InputFileChangeEventArgs e)
+    {
+        // reference: https://learn.microsoft.com/en-us/aspnet/core/blazor/file-uploads?view=aspnetcore-8.0
+        isLoading = true;
+
+        try
+        {
+            loadedFile = e.File;
+            // must be csv file
+            ReadFile(loadedFile);
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        isLoading = false;
+    }
+
+    private async void ReadFile(IBrowserFile file)
+    {
+        // reference: https://stackoverflow.com/questions/55850656/how-can-i-read-a-file-which-will-be-upload-from-a-form-in-net-core-api
+        // grabbing all contents as a single string
+        string fileContents;
+        using (var stream = file.OpenReadStream()){
+            using (var reader = new StreamReader(stream)){
+                fileContents = await reader.ReadToEndAsync();
+            }
+        }
+
+        Responses = new List<AmbassadorInfo>();
+
+        // splitting string first by newlines for each row 
+        var responses = fileContents.Split(Environment.NewLine);
+        int counter = 0;
+        
+        // now splitting by comma for each value in row
+        foreach (string response in responses){
+            var info = response.Split(",");
+            
+            // there are eleven values in each row, here I am skipping any row that does not have a datetime because it is either title row or not a student response
+            if (counter != 0 && info[0] != ""){
+                Responses.Add(new AmbassadorInfo(Convert.ToDateTime(info[0]), info[1], info[2], info[3], info[4], info[5], info[6], info[7], info[8], info[9], info[10]));
+            }
+
+            counter++;
+        }
+
+        foreach(var response in Responses){
+            Console.WriteLine(response.name);
+            printPref(response.preference);
+            Console.WriteLine(response.pref);
+            Console.WriteLine("Monday hours: ");
+        }
+    }
+
+    private void printPref(Preference pref){
+        Console.Write(": ");
+        if (pref.monday){
+            Console.Write(" monday");
+        }
+        if(pref.tuesday){
+            Console.Write(" tuesday");
+        }
+        if(pref.wednesday){
+            Console.Write(" wednesday");
+        }
+        if(pref.thursday){
+            Console.Write(" thursday");
+        }
+        if(pref.friday){
+            Console.Write(" friday");
+        }
+        if(pref.backToBack){
+            Console.Write(" consecutive hours");
+        }
+        Console.WriteLine();
+    }
+
+    private void AssignSchedule(AmbassadorInfo ambInfo){
+        // this will cycle through the given days (class objects) and assign ambassadors to open time slots with 
+        // priority given to those who turned in their responses first and taking into account the information given by their pref. response
+
+
+    }
+
+    @* private void ExcelToCSV(string filename)
+    {
+        // this is with Spire.XLS extension to work with excel files and converting to csv
+        // create a workbook object
+        try
+        {
+            Workbook workbook = new Workbook();
+            // get file name and load into the workbook object
+            workbook.LoadFromFile(filename);
+
+            // now grab the worksheet (should be the first one)
+            Worksheet sheet = workbook.Worksheets[0];
+
+            // save as csv file
+            sheet.SaveToFile("Schedule_CSV.csv", ",", Encoding.UTF8);
+
+            Console.WriteLine("made it here.");
+        }
+        catch (Exception ex){
+            Console.WriteLine(ex.Message);
+        }
+    } *@
+}
